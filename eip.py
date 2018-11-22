@@ -2,8 +2,7 @@
 
 # ==============================================================
 
-#   WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
-#   WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
+#   Forked from https://github.com/acoston/Ansible-EfficientIP
 
 # ==============================================================
 
@@ -109,7 +108,7 @@ class Eip(object):
        querystring = ''
        return self.req(method,ipm_cmd,querystring)
 
-    def ip_subnet_list(self,ipm_space,ipm_classparam,ipm_classname):
+    def ip_subnet_list(self,ipm_space,ipm_classparam,ipm_classname,ipm_subnet):
        method = 'get'
        ipm_cmd = 'rest/ip_block_subnet_list'
        if ipm_classparam is not None:
@@ -117,6 +116,8 @@ class Eip(object):
         querystring = {'TAGS' : 'network.'+ obj1 +'' , 'WHERE' : 'site_name = \''+ ipm_space +'\' AND is_terminal = \'1\' AND tag_network_'+ obj1 +' = \''+ param1 +'\''}
        elif ipm_classname is not None:
         querystring = {'WHERE' : 'site_name = \''+ ipm_space +'\' AND is_terminal = \'1\' AND subnet_class_name = \''+ ipm_classname +'\''}
+       elif ipm_subnet is not None:
+        querystring = {'WHERE' : 'site_name = \''+ ipm_space +'\' AND is_terminal = \'1\' AND subnet_name = \''+ ipm_subnet +'\''}   
        else:
         querystring = {'WHERE' : 'site_name = \''+ ipm_space +'\' AND is_terminal = \'1\''}
        return self.req(method,ipm_cmd,querystring)
@@ -227,7 +228,9 @@ def main():
                 for rows in result[0]:
                      raw_network = int(rows['start_ip_addr'],16)
                      network = '.'.join( [ str((raw_network >> 8*i) % 256)  for i in [3,2,1,0] ])
-                     data.append({ 'ipm_subnet_size' : rows['subnet_size'], 'ipm_subnet_addr' : network, 'ipm_subnet_id' : rows['subnet_id'], 'ipm_subnet' :  rows['subnet_name'] })
+                     subnet_size = int(rows['subnet_size']) - 1
+                     netmask = '.'.join([str((0xffffffff << (subnet_size.bit_length()) >> i) & 0xff) for i in [24, 16, 8, 0]])
+                     data.append({ 'ipm_subnet_size' : rows['subnet_size'], 'ipm_subnet_addr' : network, 'ipm_subnet_id' : rows['subnet_id'], 'ipm_subnet' :  rows['subnet_name'], 'ipm_subnet_mask' :  netmask })
                 req_output = { 'output' : data } 
                 module.exit_json(changed=result[2], result=req_output)
             else:
