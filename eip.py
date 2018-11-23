@@ -222,7 +222,7 @@ def main():
                 raise Exception()
 
         if ipm_action == 'ip_subnet_list':
-            result = eip.ip_subnet_list(ipm_space,ipm_classparam,ipm_classname)
+            result = eip.ip_subnet_list(ipm_space,ipm_classparam,ipm_classname,ipm_subnet)
             if result[1] == True:
                 data = []
                 for rows in result[0]:
@@ -230,7 +230,8 @@ def main():
                      network = '.'.join( [ str((raw_network >> 8*i) % 256)  for i in [3,2,1,0] ])
                      subnet_size = int(rows['subnet_size']) - 1
                      netmask = '.'.join([str((0xffffffff << (subnet_size.bit_length()) >> i) & 0xff) for i in [24, 16, 8, 0]])
-                     data.append({ 'ipm_subnet_size' : rows['subnet_size'], 'ipm_subnet_addr' : network, 'ipm_subnet_id' : rows['subnet_id'], 'ipm_subnet' :  rows['subnet_name'], 'ipm_subnet_mask' :  netmask })
+                     subnet_class_parameters = dict(x.split('=') for x in rows['subnet_class_parameters'].split('&'))
+                     data.append({ 'ipm_subnet_size' : rows['subnet_size'], 'ipm_subnet_addr' : network, 'ipm_subnet_id' : rows['subnet_id'], 'ipm_subnet' :  rows['subnet_name'], 'ipm_subnet_mask' :  netmask, 'ipm_subnet_class_parameters' : subnet_class_parameters})
                 req_output = { 'output' : data } 
                 module.exit_json(changed=result[2], result=req_output)
             else:
