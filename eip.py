@@ -166,7 +166,7 @@ def main():
             insecure         = dict(required=False),
             ipm_server       = dict(required=True),
             ipm_username     = dict(required=True),
-            ipm_password     = dict(required=True),
+            ipm_password     = dict(required=True,no_log=True),
             ipm_space        = dict(required=False),
             ipm_space_id     = dict(required=False),
             ipm_subnet       = dict(required=False),
